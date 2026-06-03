@@ -207,8 +207,8 @@ class ApiControllersTestCase(APITestCase):
         })
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['data']['name'], 'Charlie')
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['data']['name'], 'Charlie')
 
     def test_heartbeat_presence_monitoring(self):
         url = reverse('table-cards-heartbeat', kwargs={

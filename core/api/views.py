@@ -1,8 +1,14 @@
 from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+
+class StandardResultsSetPagination(LimitOffsetPagination):
+    default_limit = 100
+    max_limit = 1000
+
 
 from core.models import Tenant, DynamicTable, CardRecord, Job, OperatorAssignment
 from core.api.serializers import (
@@ -50,6 +56,7 @@ class DynamicTableViewSet(viewsets.ModelViewSet):
 class CardRecordViewSet(viewsets.ModelViewSet):
     serializer_class = CardRecordSerializer
     permission_classes = [HasHierarchicalRolePermission]
+    pagination_class = StandardResultsSetPagination
     lookup_field = 'pk'
 
     def get_table(self):

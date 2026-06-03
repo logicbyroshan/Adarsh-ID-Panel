@@ -4,6 +4,24 @@ from django.contrib.auth.models import User
 from django.db.models import JSONField
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
+from core.middleware import get_current_tenant_id
+
+class TenantIsolationQuerySet(models.QuerySet):
+    def filter(self, *args, **kwargs):
+        tenant_id = get_current_tenant_id()
+        if tenant_id is not None:
+            # Check model fields
+            field_names = [f.name for f in self.model._meta.fields]
+            if 'tenant' in field_names:
+                kwargs['tenant_id'] = tenant_id
+            elif 'table' in field_names:
+                kwargs['table__tenant_id'] = tenant_id
+        return super().filter(*args, **kwargs)
+
+class TenantIsolationManager(models.Manager):
+    def get_queryset(self):
+        return TenantIsolationQuerySet(self.model, using=self._db)
+
 
 # ==========================================
 # 1. TENANT & USER HIERARCHY MODELS
@@ -154,6 +172,8 @@ class DynamicTable(models.Model):
     """
     Dynamic tables created inside tenants, belonging to specific client users.
     """
+    objects = TenantIsolationManager()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='tables')
     client = models.ForeignKey(
@@ -230,6 +250,8 @@ class CardRecord(models.Model):
     Primary transactional table representing a dynamic card layout record.
     Dynamic column attributes are stored within the JSONB 'data' field.
     """
+    objects = TenantIsolationManager()
+
     STATUS_CHOICES = [
         ('PENDING', 'Pending'),
         ('VERIFIED', 'Verified'),
@@ -295,6 +317,8 @@ class Job(models.Model):
     Tracks background tasks orchestrated by Celery.
     Includes validation phases for uploads and JSON payloads for execution.
     """
+    objects = TenantIsolationManager()
+
     JOB_TYPES = [
         ('IMPORT_XLSX', 'Create Table From Excel'),
         ('IMPORT_XLSX_ZIP', 'Import Data + Zip Images'),
@@ -367,6 +391,8 @@ class SandboxSession(models.Model):
     """
     Active sandboxed environment for GUEST users.
     """
+    objects = TenantIsolationManager()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
@@ -386,6 +412,8 @@ class SandboxDelta(models.Model):
     Aggregated writes/deltas buffered for a GUEST sandbox session.
     Keeps production clean until session commit.
     """
+    objects = TenantIsolationManager()
+
     ACTION_CHOICES = [
         ('CREATE', 'Create'),
         ('UPDATE', 'Update'),
@@ -418,6 +446,8 @@ class AuditLog(models.Model):
     Write-only historical audit records for high-value operations.
     Supports impersonation tracking.
     """
+    objects = TenantIsolationManager()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
