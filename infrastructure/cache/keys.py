@@ -19,4 +19,8 @@ class RedisKeyFactory:
         
     @classmethod
     def session(cls, session_id: str) -> str:
-        return f"{cls.PREFIX}session:{session_id}"\n
+        return f"{cls.PREFIX}session:{session_id}"
+        
+    @classmethod
+    def realtime(cls, topic: str) -> str:
+        return f"{cls.PREFIX}realtime:{topic}"\n

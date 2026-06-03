@@ -2,21 +2,17 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import connection
 from django.core.cache import cache
-import redis
 
 class HealthCheckView(APIView):
     permission_classes = []
-    
     def get(self, request):
         return Response({"status": "ok", "service": "Adarsh-ID Panel"})
 
 class ReadinessCheckView(APIView):
     permission_classes = []
-    
     def get(self, request):
         status = "ok"
         components = {}
-        
         # Check DB
         try:
             connection.ensure_connection()
@@ -24,7 +20,6 @@ class ReadinessCheckView(APIView):
         except Exception as e:
             status = "error"
             components['database'] = str(e)
-            
         # Check Redis
         try:
             cache.set('health_check', 'ok', timeout=1)
@@ -38,6 +33,5 @@ class ReadinessCheckView(APIView):
 
 class LivenessCheckView(APIView):
     permission_classes = []
-    
     def get(self, request):
         return Response({"status": "ok"})\n

@@ -13,9 +13,10 @@ CELERY_CONFIG = {
     'task_reject_on_worker_lost': True,
     'task_publish_retry': True,
     'task_publish_retry_policy': {
-        'max_retries': 3,
+        'max_retries': 5,
         'interval_start': 0,
-        'interval_step': 0.2,
-        'interval_max': 0.5,
+        'interval_step': 0.5,
+        'interval_max': 2.0,
     },
+    'worker_max_tasks_per_child': 1000,
 }\n

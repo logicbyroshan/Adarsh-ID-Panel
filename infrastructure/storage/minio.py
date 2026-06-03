@@ -11,17 +11,13 @@ class MinioStorage(StorageContract):
             aws_secret_access_key=settings.MINIO_SECRET_KEY
         )
         self.bucket = settings.MINIO_BUCKET_NAME
-        
     def save(self, name: str, content) -> str:
         self.client.upload_fileobj(content, self.bucket, name)
         return name
-        
     def url(self, name: str) -> str:
-        return f"{settings.MINIO_PUBLIC_URL}/{name}"
-        
+        return f"{settings.MINIO_ENDPOINT_URL}/{self.bucket}/{name}"
     def delete(self, name: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=name)
-        
     def exists(self, name: str) -> bool:
         try:
             self.client.head_object(Bucket=self.bucket, Key=name)

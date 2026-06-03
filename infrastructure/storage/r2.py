@@ -11,17 +11,13 @@ class R2Storage(StorageContract):
             aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY
         )
         self.bucket = settings.R2_BUCKET_NAME
-        
     def save(self, name: str, content) -> str:
         self.client.upload_fileobj(content, self.bucket, name)
         return name
-        
     def url(self, name: str) -> str:
-        return f"{settings.R2_PUBLIC_URL}/{name}"
-        
+        return f"https://{self.bucket}.r2.cloudflarestorage.com/{name}"
     def delete(self, name: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=name)
-        
     def exists(self, name: str) -> bool:
         try:
             self.client.head_object(Bucket=self.bucket, Key=name)

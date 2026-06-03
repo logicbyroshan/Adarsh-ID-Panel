@@ -8,5 +8,5 @@ task_queues = (
     Queue('exports', task_exchange, routing_key='exports'),
     Queue('images', task_exchange, routing_key='images'),
     Queue('notifications', task_exchange, routing_key='notifications'),
-    Queue('dead_letter', task_exchange, routing_key='dead_letter'),
+    Queue('beat', task_exchange, routing_key='beat'),
 )\n
