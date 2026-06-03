@@ -237,6 +237,9 @@ mobile_shell_app/android/local.properties
 mobile_shell_app/android/app/build/
 *.jks
 *.keystore
+static/engine/
+media/engine/
+android_app/android/app/src/main/assets/index.android.bundle
 
 # Temp test scripts
 test_*.py
