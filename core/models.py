@@ -445,3 +445,7 @@ class AuditLog(models.Model):
             models.Index(fields=['target_model', 'target_id']),
             models.Index(fields=['created_at']),
         ]
+
+# Expose enterprise domain models to migration detection
+from core.enterprise.models import *
+

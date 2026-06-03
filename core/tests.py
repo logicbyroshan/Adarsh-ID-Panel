@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -230,3 +230,79 @@ class ApiControllersTestCase(APITestCase):
         response = self.client.post(url, data={"field_key": "name"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "locked")
+
+
+# =====================================================================
+# 4. ENTERPRISE DOMAINS TEST SUITE
+# =====================================================================
+from django.utils import timezone
+from core.enterprise.models import FeatureFlag, TenantFeatureOverride, License, EventLog
+from core.enterprise.services import FeatureService, LicenseService, ImpersonationService, BulkOperationService
+from core.enterprise.bus import EventBusService
+
+class EnterpriseTestCase(TestCase):
+    def setUp(self):
+        self.tenant = Tenant.objects.create(name="Enterprise Corp", subdomain="enterprise")
+        self.admin_user = User.objects.create_user(username="ent_admin", password="password")
+        self.admin_profile = UserProfile.objects.create(user=self.admin_user, tenant=self.tenant, role='ADMIN')
+        self.pro_user = User.objects.create_user(username="pro_admin", password="password")
+        self.pro_profile = UserProfile.objects.create(user=self.pro_user, tenant=self.tenant, role='PRO_USER')
+        
+        self.table = DynamicTable.objects.create(tenant=self.tenant, client=self.admin_profile, name="Clients", slug="clients")
+        TableField.objects.create(table=self.table, name="Company", key="company", type="TEXT", is_required=True)
+        self.record1 = CardRecord.objects.create(table=self.table, data={"company": "Google"}, version=1)
+
+    def test_feature_override_rules(self):
+        # Global feature is inactive initially
+        flag = FeatureFlag.objects.create(name="Advanced API", key="advanced_api", is_active=False)
+        self.assertFalse(FeatureService.is_feature_enabled(self.tenant, "advanced_api"))
+        
+        # Override is enabled for this specific tenant
+        FeatureService.set_override(self.tenant, "advanced_api", enabled=True)
+        self.assertTrue(FeatureService.is_feature_enabled(self.tenant, "advanced_api"))
+
+    def test_license_signatures_and_tampering(self):
+        expiry = timezone.now() + timezone.timedelta(days=30)
+        license_obj = LicenseService.provision_license(self.tenant, 'ENTERPRISE', 100, 50, expiry)
+        
+        # Check that integrity check passes
+        self.assertTrue(LicenseService.verify_license_integrity(license_obj))
+        
+        # Simulate db tampering by manually altering max_users fields without recalculating signature
+        license_obj.max_users = 999999
+        self.assertFalse(LicenseService.verify_license_integrity(license_obj))
+
+    def test_impersonation_permissions(self):
+        # Admin trying to impersonate should raise PermissionDenied
+        with self.assertRaises(PermissionDenied):
+            ImpersonationService.start_session(self.admin_user, "pro_admin", "checking logs")
+            
+        # PRO_USER starting impersonation should succeed
+        session = ImpersonationService.start_session(self.pro_user, "ent_admin", "support ticket")
+        self.assertEqual(session.impersonated.username, "ent_admin")
+
+    def test_event_bus_and_webhook_emits(self):
+        event = EventBusService.emit(str(self.tenant.id), "card.created", {"card_id": str(self.record1.id)})
+        self.assertEqual(event.event_type, "card.created")
+        
+        # Audit record created in EventLog
+        self.assertEqual(EventLog.objects.filter(tenant=self.tenant).count(), 1)
+
+    def test_bulk_operations(self):
+        # Trigger bulk field update
+        bulk_op = BulkOperationService.trigger_bulk_operation(
+            tenant=self.tenant,
+            user=self.admin_user,
+            action_type='BULK_FIELD_UPDATE',
+            filter_query={"company": "Google"},
+            update_payload={"data": {"company": "Alphabet"}}
+        )
+        
+        # Execute the process directly
+        BulkOperationService.process_operation(str(bulk_op.id))
+        
+        # Verify card record was modified in the transaction
+        self.record1.refresh_from_db()
+        self.assertEqual(self.record1.data["company"], "Alphabet")
+        self.assertEqual(self.record1.version, 2)
+

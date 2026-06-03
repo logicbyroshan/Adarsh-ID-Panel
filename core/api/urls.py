@@ -20,4 +20,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(tables_router.urls)),
     path('', include(cards_router.urls)),
+    path('enterprise/', include('core.enterprise.urls')),
 ]
+
