@@ -28,24 +28,24 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.organizations',
     'apps.permissions',
-    'apps.features',
-    'apps.licenses',
-    'apps.versions',
+    #'apps.features',
+    #'apps.licenses',
+    #'apps.versions',
     'apps.impersonation',
     'apps.tables',
     'apps.fields',
     'apps.cards',
-    'apps.workflow',
-    'apps.imports',
-    'apps.exports',
-    'apps.mediafiles',
-    'apps.jobs',
-    'apps.notifications',
-    'apps.search',
-    'apps.sandbox',
+    #'apps.workflow',
+    #'apps.imports',
+    #'apps.exports',
+    #'apps.mediafiles',
+    #'apps.jobs',
+    #'apps.notifications',
+    #'apps.search',
+    #'apps.sandbox',
     'apps.auditlogs',
-    'apps.settings',
-    'apps.desktop_sync',
+    #'apps.settings',
+    #'apps.desktop_sync',
 ]
 
 MIDDLEWARE = [
@@ -109,6 +109,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static_root')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

@@ -34,4 +34,4 @@ class ReadinessCheckView(APIView):
 class LivenessCheckView(APIView):
     permission_classes = []
     def get(self, request):
-        return Response({"status": "ok"})\n
+        return Response({"status": "ok"})
