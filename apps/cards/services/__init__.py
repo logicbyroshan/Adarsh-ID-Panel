@@ -3,6 +3,7 @@ from typing import Dict, Any
 from django.db import transaction, IntegrityError
 from apps.cards.models import Card, CardUniqueValue
 from apps.fields.models import Field
+from apps.auditlogs.models import AuditLog, AuditEvent
 from rest_framework.exceptions import ValidationError
 
 class StaleWriteError(Exception):
@@ -16,7 +17,7 @@ class CardService:
             field_str_id = str(field.id)
             if field_str_id in data:
                 value = data[field_str_id]
-                if value is not None:
+                if value is not None and str(value).strip() != "":
                     # Hash the value to ensure it fits in max_length=255 and index
                     value_hash = hashlib.sha256(str(value).encode('utf-8')).hexdigest()
                     try:
@@ -27,13 +28,24 @@ class CardService:
                         )
                     except IntegrityError:
                         raise ValidationError(f"Unique constraint failed for field: {field.name}")
+                else:
+                    # Clean up value if set to None or empty
+                    CardUniqueValue.objects.filter(card_id=card_id, field_id=field.id).delete()
 
     @staticmethod
     @transaction.atomic
     def create_card(table, organization_id: str, data: Dict[str, Any], created_by=None) -> Card:
-        # Generate a display ID (simple implementation)
-        display_id = f"TBL-{Card.objects.filter(table=table).count() + 1}"
-        
+        # Atomically increment the table's card_sequence to avoid race conditions
+        # under concurrent bulk imports. select_for_update locks the table row.
+        from django.db.models import F
+        from apps.tables.models import Table as TableModel
+        locked = TableModel.objects.select_for_update().get(pk=table.pk)
+        locked.card_sequence = F('card_sequence') + 1
+        locked.save(update_fields=['card_sequence'])
+        locked.refresh_from_db(fields=['card_sequence'])
+        seq = locked.card_sequence
+        display_id = f"TBL-{seq}"
+
         card = Card.objects.create(
             table=table,
             organization_id=organization_id,
@@ -41,8 +53,15 @@ class CardService:
             data=data,
             created_by=created_by
         )
-        
+
         CardService._enforce_unique_fields(str(table.id), str(card.id), data)
+
+        AuditLog.objects.create(
+            event_type=AuditEvent.CARD_CREATED,
+            actor=created_by,
+            target_organization_id=organization_id,
+            details={"card_id": str(card.id), "table_id": str(table.id), "display_id": display_id}
+        )
         return card
 
     @staticmethod
@@ -67,6 +86,13 @@ class CardService:
             
         card.refresh_from_db()
         CardService._enforce_unique_fields(str(card.table_id), str(card.id), new_data)
+        
+        AuditLog.objects.create(
+            event_type=AuditEvent.CARD_UPDATED,
+            actor=updated_by,
+            target_organization_id=card.organization_id,
+            details={"card_id": str(card.id), "table_id": str(card.table_id), "version": card.version}
+        )
         return card
 
     @staticmethod
@@ -74,3 +100,10 @@ class CardService:
         card.soft_delete(user=deleted_by)
         # Remove unique values to free them up
         CardUniqueValue.objects.filter(card=card).delete()
+        
+        AuditLog.objects.create(
+            event_type=AuditEvent.CARD_DELETED,
+            actor=deleted_by,
+            target_organization_id=card.organization_id,
+            details={"card_id": str(card.id), "table_id": str(card.table_id)}
+        )

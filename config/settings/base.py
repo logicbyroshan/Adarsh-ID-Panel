@@ -35,15 +35,17 @@ INSTALLED_APPS = [
     'apps.tables',
     'apps.fields',
     'apps.cards',
-    #'apps.workflow',
-    #'apps.imports',
-    #'apps.exports',
-    #'apps.mediafiles',
-    #'apps.jobs',
+    'apps.workflow',
+    'apps.imports',
+    'apps.exports',
+    'apps.mediafiles',
+    'apps.jobs',
     #'apps.notifications',
     #'apps.search',
-    #'apps.sandbox',
+    'apps.sandbox',
     'apps.auditlogs',
+    'apps.pro',
+    'apps.desktop_sync',
     #'apps.settings',
     #'apps.desktop_sync',
 ]
@@ -125,7 +127,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
-        'user': '1000/day'
+        'user': '1000/day',
+        'desktop': '300/min',
     },
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
@@ -140,6 +143,48 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/1')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='redis://localhost:6379/1')
+
+# Celery Queue Routing
+CELERY_TASK_DEFAULT_QUEUE = 'default'
+CELERY_TASK_ROUTES = {
+    'apps.jobs.tasks.run_job_task': {'queue': 'default'},
+    'sandbox.cleanup_expired_sessions': {'queue': 'default'},
+}
+
+CELERY_BEAT_SCHEDULE = {
+    'sandbox-cleanup-expired-sessions': {
+        'task': 'sandbox.cleanup_expired_sandbox_sessions',
+        'schedule': 3600,  # every hour
+    },
+    'pro-statistics-snapshot': {
+        'task': 'pro.generate_statistics_snapshot',
+        'schedule': 3600,  # every hour
+    },
+    'pro-audit-aggregation': {
+        'task': 'pro.aggregate_audit_logs',
+        'schedule': 86400,  # every day
+    },
+}
+
+# Storage Configuration
+STORAGE_PROVIDER = env('STORAGE_PROVIDER', default='local')
+STORAGE_R2_CONFIG = {
+    'endpoint_url': env('R2_ENDPOINT_URL', default=''),
+    'bucket_name': env('R2_BUCKET_NAME', default=''),
+    'access_key': env('R2_ACCESS_KEY', default=''),
+    'secret_key': env('R2_SECRET_KEY', default=''),
+}
+STORAGE_MINIO_CONFIG = {
+    'endpoint_url': env('MINIO_ENDPOINT_URL', default=''),
+    'bucket_name': env('MINIO_BUCKET_NAME', default=''),
+    'access_key': env('MINIO_ACCESS_KEY', default=''),
+    'secret_key': env('MINIO_SECRET_KEY', default=''),
+}
+
+# Image Validation
+ALLOWED_IMAGE_EXTENSIONS = ['jpeg', 'jpg', 'png', 'webp']
+ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
 
 LOGGING = {
     'version': 1,

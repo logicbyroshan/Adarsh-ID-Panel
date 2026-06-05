@@ -13,4 +13,14 @@ urlpatterns = [
     path('', include('apps.tables.urls')),
     path('', include('apps.fields.urls')),
     path('', include('apps.cards.urls')),
+    path('', include('apps.workflow.urls')),
+    path('', include('apps.jobs.urls')),
+    path('', include('apps.mediafiles.urls')),
+    path('', include('apps.imports.urls')),
+    path('', include('apps.exports.urls')),
+    path('', include('apps.sandbox.urls')),
+    path('', include('apps.pro.urls')),
+    path('', include('apps.desktop_sync.urls')),
 ]
+
+

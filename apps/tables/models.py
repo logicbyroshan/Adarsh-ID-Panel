@@ -12,6 +12,7 @@ class Table(models.Model):
     status = models.CharField(max_length=50, choices=TableStatus.choices, default=TableStatus.ACTIVE)
     
     is_deleted = models.BooleanField(default=False)
+    card_sequence = models.PositiveIntegerField(default=0)  # Atomic counter for display_id
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -4,8 +4,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.postgres.indexes import GinIndex
 
 class CardStatus(models.TextChoices):
-    ACTIVE = 'ACTIVE', 'Active'
+    PENDING = 'PENDING', 'Pending'
+    VERIFIED = 'VERIFIED', 'Verified'
+    APPROVED = 'APPROVED', 'Approved'
+    DOWNLOADED = 'DOWNLOADED', 'Downloaded'
     DELETED = 'DELETED', 'Deleted'
+    # Legacy alias kept for migration safety
+    ACTIVE = 'ACTIVE', 'Active'
 
 class Card(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -13,7 +18,7 @@ class Card(models.Model):
     organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE, related_name='cards')
     display_id = models.CharField(max_length=100)
     
-    status = models.CharField(max_length=50, choices=CardStatus.choices, default=CardStatus.ACTIVE)
+    status = models.CharField(max_length=50, choices=CardStatus.choices, default=CardStatus.PENDING)
     version = models.IntegerField(default=1) # Optimistic locking
     
     data = models.JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder)
@@ -34,6 +39,7 @@ class Card(models.Model):
             models.Index(fields=['status']),
             models.Index(fields=['created_at']),
             models.Index(fields=['deleted_at']),
+            models.Index(fields=['version']),
             GinIndex(fields=['data']),
         ]
 

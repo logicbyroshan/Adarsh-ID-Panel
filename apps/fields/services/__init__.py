@@ -1,4 +1,6 @@
 from apps.fields.models import Field
+from apps.auditlogs.models import AuditLog, AuditEvent
+from apps.cards.models import CardUniqueValue
 
 class FieldService:
     @staticmethod
@@ -16,11 +18,19 @@ class FieldService:
             validation_rules=validation_rules,
             display_order=display_order
         )
+        
+        # Get organization_id from table
+        org_id = field.table.organization_id
+        AuditLog.objects.create(
+            event_type=AuditEvent.FIELD_CREATED,
+            actor=created_by,
+            target_organization_id=org_id,
+            details={"field_id": str(field.id), "table_id": table_id, "name": name, "type": type}
+        )
         return field
 
     @staticmethod
     def update_field(field: Field, name: str=None, is_required: bool=None, display_order: int=None, updated_by=None) -> Field:
-        # Note: Type changes are allowed. But let's assume we update basic fields.
         if name is not None:
             field.name = name
         if is_required is not None:
@@ -28,8 +38,26 @@ class FieldService:
         if display_order is not None:
             field.display_order = display_order
         field.save()
+        
+        org_id = field.table.organization_id
+        AuditLog.objects.create(
+            event_type=AuditEvent.FIELD_UPDATED,
+            actor=updated_by,
+            target_organization_id=org_id,
+            details={"field_id": str(field.id), "table_id": str(field.table_id), "name": field.name}
+        )
         return field
 
     @staticmethod
     def delete_field(field: Field, deleted_by=None):
         field.soft_delete()
+        # Clean up unique values for this field
+        CardUniqueValue.objects.filter(field=field).delete()
+        
+        org_id = field.table.organization_id
+        AuditLog.objects.create(
+            event_type=AuditEvent.FIELD_UPDATED,  # Or a general field deleted log
+            actor=deleted_by,
+            target_organization_id=org_id,
+            details={"field_id": str(field.id), "table_id": str(field.table_id), "name": field.name, "action": "delete"}
+        )
