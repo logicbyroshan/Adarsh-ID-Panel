@@ -37,6 +37,13 @@ class AuditEvent(models.TextChoices):
     IMPORT_WARNING = 'IMPORT_WARNING', 'Import Warning'
     REUPLOAD_START = 'REUPLOAD_START', 'Reupload Started'
     REUPLOAD_COMPLETE = 'REUPLOAD_COMPLETE', 'Reupload Completed'
+    BACKUP_VERIFIED = 'BACKUP_VERIFIED', 'Backup Verified'
+    BACKUP_FAILED = 'BACKUP_FAILED', 'Backup Failed'
+    RESTORE_SIMULATION = 'RESTORE_SIMULATION', 'Restore Simulation'
+    MIGRATION_WARNING = 'MIGRATION_WARNING', 'Migration Warning'
+    DEPLOYMENT_VALIDATION = 'DEPLOYMENT_VALIDATION', 'Deployment Validation'
+    DISK_WARNING = 'DISK_WARNING', 'Disk Warning'
+    MEMORY_WARNING = 'MEMORY_WARNING', 'Memory Warning'
 
 class AuditLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -54,3 +61,16 @@ class AuditLog(models.Model):
             models.Index(fields=['event_type']),
             models.Index(fields=['created_at']),
         ]
+
+    def save(self, *args, **kwargs):
+        try:
+            from apps.hardening.context import get_request_id
+            rid = get_request_id()
+            if rid:
+                if self.details is None:
+                    self.details = {}
+                if isinstance(self.details, dict):
+                    self.details['request_id'] = rid
+        except ImportError:
+            pass
+        super().save(*args, **kwargs)

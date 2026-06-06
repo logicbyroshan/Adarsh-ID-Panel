@@ -317,6 +317,12 @@ class ProDashboardView(APIView):
         from apps.pro.services import _require_pro
         _require_pro(request.user)
 
+        from django.core.cache import cache
+        cache_key = "pro_dashboard_data"
+        cached_response = cache.get(cache_key)
+        if cached_response is not None:
+            return Response(cached_response)
+
         from apps.jobs.models import Job, JobStatus
         from apps.imports.models import ImportSession
         from apps.exports.models import ExportSession
@@ -342,7 +348,7 @@ class ProDashboardView(APIView):
             MaintenanceModeService.get_active(), many=True
         ).data
 
-        return Response({
+        response_data = {
             'statistics': stats,
             'recent_imports': recent_imports,
             'recent_exports': recent_exports,
@@ -350,4 +356,8 @@ class ProDashboardView(APIView):
             'recent_backups': recent_backups,
             'active_announcements': active_announcements,
             'maintenance_status': maintenance,
-        })
+        }
+        
+        # Cache for 60 seconds
+        cache.set(cache_key, response_data, timeout=60)
+        return Response(response_data)

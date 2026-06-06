@@ -40,17 +40,18 @@ INSTALLED_APPS = [
     'apps.exports',
     'apps.mediafiles',
     'apps.jobs',
-    #'apps.notifications',
+    'apps.notifications',
     #'apps.search',
     'apps.sandbox',
     'apps.auditlogs',
     'apps.pro',
     'apps.desktop_sync',
-    #'apps.settings',
-    #'apps.desktop_sync',
+    'apps.hardening',
+    'apps.operations',
 ]
 
 MIDDLEWARE = [
+    'apps.hardening.middleware.RequestCorrelationMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -84,6 +85,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres://postgres:postgres@127.0.0.1:5432/adarsh')
 }
+DATABASES['default']['CONN_MAX_AGE'] = env.int('DATABASE_CONN_MAX_AGE', 60)
 
 CACHES = {
     "default": {
@@ -122,13 +124,16 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+        'apps.hardening.throttling.HardenedAnonRateThrottle',
+        'apps.hardening.throttling.HardenedUserRateThrottle',
+        'apps.desktop_sync.throttling.DesktopRateThrottle',
+        'apps.hardening.throttling.ProRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day',
         'desktop': '300/min',
+        'pro': '1000/min',
     },
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
 }
@@ -143,6 +148,10 @@ CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
 
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/1')
 CELERY_RESULT_BACKEND = env('CELERY_BROKER_URL', default='redis://localhost:6379/1')
+
+# Hardening: Global Task Time Limits
+CELERY_TASK_TIME_LIMIT = 3600       # 1 hour hard limit
+CELERY_TASK_SOFT_TIME_LIMIT = 3000  # 50 minutes soft limit
 
 # Celery Queue Routing
 CELERY_TASK_DEFAULT_QUEUE = 'default'
@@ -163,6 +172,26 @@ CELERY_BEAT_SCHEDULE = {
     'pro-audit-aggregation': {
         'task': 'pro.aggregate_audit_logs',
         'schedule': 86400,  # every day
+    },
+    'ops-backup-verification': {
+        'task': 'apps.operations.tasks.verify_backups_task',
+        'schedule': 86400,  # daily
+    },
+    'ops-retention-cleanup': {
+        'task': 'apps.operations.tasks.retention_cleanup_task',
+        'schedule': 86400,  # daily
+    },
+    'ops-env-diagnostics': {
+        'task': 'apps.operations.tasks.env_diagnostics_task',
+        'schedule': 60,  # every 1 minute
+    },
+    'ops-disk-checks': {
+        'task': 'apps.operations.tasks.disk_checks_task',
+        'schedule': 300,  # every 5 minutes
+    },
+    'ops-memory-checks': {
+        'task': 'apps.operations.tasks.memory_checks_task',
+        'schedule': 300,  # every 5 minutes
     },
 }
 
@@ -186,6 +215,40 @@ ALLOWED_IMAGE_EXTENSIONS = ['jpeg', 'jpg', 'png', 'webp']
 ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 
+# Structured Logging Configuration
+def add_request_context(logger, method_name, event_dict):
+    try:
+        from apps.hardening.context import get_request_context
+        ctx = get_request_context()
+        event_dict.update({k: v for k, v in ctx.items() if v is not None})
+    except ImportError:
+        pass
+    
+    # Map 'event' key to 'message'
+    if 'event' in event_dict:
+        event_dict['message'] = event_dict.pop('event')
+    
+    # Map logger name to 'service'
+    if logger:
+        event_dict['service'] = getattr(logger, 'name', str(logger))
+    elif 'logger_name' in event_dict:
+        event_dict['service'] = event_dict.pop('logger_name')
+        
+    return event_dict
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", key="timestamp"),
+        add_request_context,
+        structlog.processors.JSONRenderer()
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -193,6 +256,11 @@ LOGGING = {
         'json': {
             '()': structlog.stdlib.ProcessorFormatter,
             'processor': structlog.processors.JSONRenderer(),
+            'foreign_pre_chain': [
+                structlog.stdlib.add_log_level,
+                structlog.processors.TimeStamper(fmt="iso", key="timestamp"),
+                add_request_context,
+            ],
         },
     },
     'handlers': {

@@ -50,6 +50,16 @@ class JobLog(models.Model):
         db_table = 'job_log'
         ordering = ['created_at']
 
+    def save(self, *args, **kwargs):
+        try:
+            from apps.hardening.context import get_request_id
+            rid = get_request_id()
+            if rid and rid not in self.message:
+                self.message = f"[{rid}] {self.message}"
+        except ImportError:
+            pass
+        super().save(*args, **kwargs)
+
 class JobEvent(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='events')

@@ -321,6 +321,15 @@ class FeatureFlagService:
         flag.is_enabled = is_enabled
         flag.updated_by = pro_user
         flag.save(update_fields=['is_enabled', 'updated_by', 'updated_at'])
+        
+        # Invalidate cache
+        from django.core.cache import cache
+        cache.delete(f"feature_flag:{key}:global")
+        if hasattr(cache, 'delete_pattern'):
+            cache.delete_pattern(f"feature_flag:{key}:*")
+        else:
+            cache.clear()
+            
         _audit(ProAuditEvent.FEATURE_FLAG_CHANGED, pro_user,
                details={'key': key, 'is_enabled': is_enabled, 'scope': 'global'})
         return flag
@@ -334,6 +343,12 @@ class FeatureFlagService:
             organization=organization,
             defaults={'is_enabled': is_enabled, 'updated_by': pro_user},
         )
+        
+        # Invalidate cache
+        from django.core.cache import cache
+        cache.delete(f"feature_flag:{key}:{organization.id}")
+        cache.delete(f"feature_flag:{key}:global")
+        
         _audit(ProAuditEvent.FEATURE_FLAG_CHANGED, pro_user,
                target_org=organization,
                details={'key': key, 'is_enabled': is_enabled, 'scope': 'client', 'org_id': str(organization.id)})
@@ -342,18 +357,32 @@ class FeatureFlagService:
     @staticmethod
     def is_enabled(key, organization=None) -> bool:
         """Check if a feature is enabled globally or for the given org."""
+        from django.core.cache import cache
+        org_id = str(organization.id) if organization else 'global'
+        cache_key = f"feature_flag:{key}:{org_id}"
+        
+        cached_val = cache.get(cache_key)
+        if cached_val is not None:
+            return cached_val
+            
         try:
             flag = FeatureFlag.objects.get(key=key)
         except FeatureFlag.DoesNotExist:
-            return True  # default-on if not configured
+            res = True
+            cache.set(cache_key, res, timeout=600)
+            return res
 
         if organization:
             try:
                 override = ClientFeatureFlag.objects.get(feature_flag=flag, organization=organization)
-                return override.is_enabled
+                res = override.is_enabled
+                cache.set(cache_key, res, timeout=600)
+                return res
             except ClientFeatureFlag.DoesNotExist:
                 pass
-        return flag.is_enabled
+        res = flag.is_enabled
+        cache.set(cache_key, res, timeout=600)
+        return res
 
     @staticmethod
     def get_all_for_client(organization):

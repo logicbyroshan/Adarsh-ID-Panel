@@ -1,10 +1,7 @@
 from django.urls import path, include
-from .health import HealthCheckView, ReadinessCheckView, LivenessCheckView
 
 urlpatterns = [
-    path('health/', HealthCheckView.as_view(), name='health'),
-    path('health/ready/', ReadinessCheckView.as_view(), name='ready'),
-    path('health/live/', LivenessCheckView.as_view(), name='live'),
+    path('', include('apps.hardening.urls')),
     
     path('', include('apps.users.urls')),
     path('', include('apps.organizations.urls')),
@@ -21,6 +18,8 @@ urlpatterns = [
     path('', include('apps.sandbox.urls')),
     path('', include('apps.pro.urls')),
     path('', include('apps.desktop_sync.urls')),
+    path('', include('apps.operations.urls')),
+    path('notifications/', include('apps.notifications.urls')),
 ]
 
 
