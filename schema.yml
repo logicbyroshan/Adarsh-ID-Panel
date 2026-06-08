@@ -1430,6 +1430,214 @@ paths:
               schema:
                 $ref: '#/components/schemas/MediaFile'
           description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: v1_notifications_retrieve
+      description: List notifications for the logged in web user.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/{delivery_id}/archive/:
+    post:
+      operationId: v1_notifications_archive_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/{delivery_id}/dismiss/:
+    post:
+      operationId: v1_notifications_dismiss_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/{delivery_id}/read/:
+    post:
+      operationId: v1_notifications_read_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/desktop/:
+    get:
+      operationId: v1_notifications_desktop_retrieve
+      description: List notifications targeting the desktop channels inside the key's
+        organization.
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/desktop/{delivery_id}/acknowledge/:
+    post:
+      operationId: v1_notifications_desktop_acknowledge_create
+      description: Acknowledges a critical notification, making sure it is critical
+        level.
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/desktop/{delivery_id}/read/:
+    post:
+      operationId: v1_notifications_desktop_read_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/desktop/mark-all-read/:
+    post:
+      operationId: v1_notifications_desktop_mark_all_read_create
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/desktop/unread-count/:
+    get:
+      operationId: v1_notifications_desktop_unread_count_retrieve
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/mark-all-read/:
+    post:
+      operationId: v1_notifications_mark_all_read_create
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/mobile/:
+    get:
+      operationId: v1_notifications_mobile_retrieve
+      description: List notifications, verifying that MOBILE is supported in delivery
+        channels.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/mobile/{delivery_id}/read/:
+    post:
+      operationId: v1_notifications_mobile_read_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/mobile/mark-all-read/:
+    post:
+      operationId: v1_notifications_mobile_mark_all_read_create
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/mobile/unread-count/:
+    get:
+      operationId: v1_notifications_mobile_unread_count_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/preferences/:
+    get:
+      operationId: v1_notifications_preferences_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: v1_notifications_preferences_partial_update
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/notifications/unread-count/:
+    get:
+      operationId: v1_notifications_unread_count_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/v1/operations/dashboard/:
     get:
       operationId: v1_operations_dashboard_retrieve
@@ -1860,6 +2068,171 @@ paths:
     get:
       operationId: v1_pro_statistics_history_retrieve
       description: GET /pro/statistics/history/
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/dashboard/:
+    get:
+      operationId: v1_reprints_dashboard_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/desktop/:
+    get:
+      operationId: v1_reprints_desktop_retrieve
+      description: GET /desktop/reprints/ — Fetch all CONFIRMED reprint requests for
+        this key's org.
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/desktop/{id}/images/:
+    get:
+      operationId: v1_reprints_desktop_images_retrieve
+      description: GET /desktop/reprints/<request_id>/images/ — Fetch all media file
+        metas for reprint request card.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/desktop/printed/:
+    post:
+      operationId: v1_reprints_desktop_printed_create
+      description: POST /desktop/reprints/printed/ — Mark requests as PRINTED.
+      tags:
+      - v1
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/exports/:
+    post:
+      operationId: v1_reprints_exports_create
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+  /api/v1/reprints/exports/{id}/:
+    get:
+      operationId: v1_reprints_exports_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/reports/:
+    get:
+      operationId: v1_reprints_reports_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/requests/:
+    get:
+      operationId: v1_reprints_requests_retrieve
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_reprints_requests_create
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+  /api/v1/reprints/requests/{id}/:
+    get:
+      operationId: v1_reprints_requests_retrieve_2
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/requests/{id}/approve/:
+    post:
+      operationId: v1_reprints_requests_approve_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/requests/{id}/print/:
+    post:
+      operationId: v1_reprints_requests_print_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reprints/requests/{id}/reject/:
+    post:
+      operationId: v1_reprints_requests_reject_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
       tags:
       - v1
       security:

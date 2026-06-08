@@ -1,6 +1,17 @@
 # Adarsh ID Panel: Known Limitations
 
-This document lists design boundaries, hardware-constrained performance limits, and system constraints in the v1.2.0 release.
+This document lists design boundaries, hardware-constrained performance limits, and system constraints in the v1.3.0-rc1 release.
+
+---
+
+## 0. Notification & Reprint Boundaries
+
+- **Inactive Notification Channels**:
+  * **Constraint**: Email and webhook delivery channels are registered in the models but are not active in RC1.
+  * **Rationale**: Delivery logic is future-ready; only WEB, MOBILE, and DESKTOP channels actively record delivery status logs in this release candidate.
+- **Reprint Lock State**:
+  * **Constraint**: Once a reprint request is created, the target card's schema cannot be modified in a way that deletes fields mapped in the reprint request draft data.
+  * **Rationale**: Ensures structural integrity of draft data and image replacements until approval/rejection decision is finalized.
 
 ---
 

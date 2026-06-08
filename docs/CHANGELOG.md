@@ -4,6 +4,19 @@ This document tracks all version iterations, key feature updates, and production
 
 ---
 
+## [1.3.0-rc1] - 2026-06-08
+### Added
+- **Phase 19 Notification Platform**:
+  - Centralized model tracking `Notification`, `NotificationEvent`, `NotificationDelivery`, and `NotificationPreference`.
+  - Level-based severity routing (INFO, SUCCESS, WARNING, ERROR, CRITICAL).
+  - Target scoping for Global, Organization, Client, Role, and User notifications.
+  - Channels integration (Web, Mobile, Desktop, webhook ready) and visbility windows support.
+- **Phase 20 Reprint Management System**:
+  - Out-of-workflow reprint requests (`ReprintRequest`, `ReprintHistory`, `ReprintExportSession`) keeping printed cards in `DOWNLOADED` status.
+  - Instant application of draft changes (data and media file replacements) upon confirmation.
+  - Printing counters tracking (`reprint_count`, `total_print_count`) and automated audit logging.
+  - Desktop sync API integration for bulk reprint retrieval, asset fetching, and completion updates.
+
 ## [1.2.0] - 2026-06-06
 ### Added
 - **Phase 17 Operations & DR**:

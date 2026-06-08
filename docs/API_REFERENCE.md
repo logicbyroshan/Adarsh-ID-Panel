@@ -293,3 +293,102 @@ This document details all backend API endpoints, including routing, methods, aut
     }
   }
   ```
+
+---
+
+## 7. Notifications Endpoints
+
+### GET `/api/v1/notifications/unread-count/`
+* **Purpose**: Returns the count of unread notifications for the user.
+* **Permission**: IsAuthenticated
+* **Response Payload (200 OK)**:
+  ```json
+  {
+    "unread_count": 5
+  }
+  ```
+
+### POST `/api/v1/notifications/mark-all-read/`
+* **Purpose**: Marks all active notifications for the current user as Read.
+* **Permission**: IsAuthenticated
+* **Response Payload (200 OK)**:
+  ```json
+  {
+    "status": "success",
+    "marked_count": 5
+  }
+  ```
+
+---
+
+## 8. Reprint Request Management Endpoints
+
+### GET `/api/v1/reprints/requests/`
+* **Purpose**: Lists reprint requests. Clients see their organization's requests; operators/admins see all assigned requests.
+* **Permission**: IsAuthenticated
+* **Response Payload (200 OK)**:
+  ```json
+  [
+    {
+      "id": "7b7a69b7-1c60-4965-9f5b-df8a21199a5e",
+      "card_id": "e8e6d2b5-bd8a-4934-be57-9f448b11c6d3",
+      "status": "REQUESTED",
+      "requested_by": "client_username",
+      "draft_data": {
+        "student_name": "Corrected John Doe"
+      },
+      "created_at": "2026-06-08T12:00:00Z"
+    }
+  ]
+  ```
+
+### POST `/api/v1/reprints/requests/`
+* **Purpose**: Creates a new reprint request for a DOWNLOADED card.
+* **Permission**: IsAuthenticated (Client, Assistant)
+* **Request Payload**:
+  ```json
+  {
+    "card_id": "e8e6d2b5-bd8a-4934-be57-9f448b11c6d3",
+    "draft_data": {
+      "student_name": "Corrected John Doe"
+    },
+    "draft_media_changes": {}
+  }
+  ```
+* **Response Payload (201 Created)**:
+  ```json
+  {
+    "id": "7b7a69b7-1c60-4965-9f5b-df8a21199a5e",
+    "status": "REQUESTED"
+  }
+  ```
+
+### POST `/api/v1/reprints/requests/{id}/approve/`
+* **Purpose**: Approves a reprint request and immediately updates the card's active details and increments counters.
+* **Permission**: IsAuthenticated (Operator, Admin, Pro User)
+* **Response Payload (200 OK)**:
+  ```json
+  {
+    "id": "7b7a69b7-1c60-4965-9f5b-df8a21199a5e",
+    "status": "CONFIRMED"
+  }
+  ```
+
+### GET `/api/v1/reprints/desktop/`
+* **Purpose**: Scopes and retrieves confirmed reprints for desktop printing clients.
+* **Permission**: Desktop API Key Authentication (`X-Desktop-Key`)
+* **Response Payload (200 OK)**:
+  ```json
+  {
+    "count": 1,
+    "results": [
+      {
+        "id": "7b7a69b7-1c60-4965-9f5b-df8a21199a5e",
+        "card_display_id": "CARD-001",
+        "draft_data": {
+          "student_name": "Corrected John Doe"
+        }
+      }
+    ]
+  }
+  ```

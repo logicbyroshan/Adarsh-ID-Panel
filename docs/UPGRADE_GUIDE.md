@@ -1,6 +1,6 @@
-# Adarsh ID Panel: Upgrade Guide (v1.1.0 to v1.2.0)
+# Adarsh ID Panel: Upgrade Guide (v1.2.0 to v1.3.0-rc1)
 
-This guide outlines the steps required to safely upgrade the Adarsh ID Panel backend from v1.1.0 to v1.2.0, including database schemas, cache updates, and worker configurations.
+This guide outlines the steps required to safely upgrade the Adarsh ID Panel backend from v1.2.0 to v1.3.0-rc1, including database schemas, notification settings, and reprint workflow migrations.
 
 ---
 

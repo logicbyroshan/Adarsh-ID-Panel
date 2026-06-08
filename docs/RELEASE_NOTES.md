@@ -1,11 +1,18 @@
-# Adarsh ID Panel: Release Notes (v1.2.0)
+# Adarsh ID Panel: Release Notes (v1.3.0-rc1)
 
-This release elevates the Adarsh ID Panel backend platform to production readiness. It combines the core identity management domains with hardening measures, deployment telemetry, and disaster recovery procedures.
+This release elevates the Adarsh ID Panel backend platform to production readiness. It combines the core identity management domains with hardening measures, deployment telemetry, disaster recovery procedures, a centralized notification platform, and a dedicated reprint request management flow.
 
 ---
 
 ## 1. Key Platform Deliverables
 
+- **Centralized Notification Platform**:
+  - Centralized notification routing with global, client, role, organization, and user scoped targets.
+  - Multi-channel delivery rules (Web, Mobile, Desktop) supporting severity levels (INFO, SUCCESS, WARNING, ERROR, CRITICAL).
+- **Reprint Management System**:
+  - Dedicated out-of-workflow reprint request flow ensuring cards remain in `DOWNLOADED` status.
+  - Immediate application of data and media file replacements upon approval.
+  - Desktop sync API integration for bulk printing.
 - **Enterprise Reliability**:
   - Auto-healing database pools and thread-safe request correlation tracking.
   - Fail-fast validators ensuring all database, caching, and storage nodes are reachable on system boot.
