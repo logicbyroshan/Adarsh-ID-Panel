@@ -27,6 +27,10 @@ class Card(models.Model):
     updated_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='cards_updated')
     deleted_by = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='cards_deleted')
     
+    # Reprint counters
+    reprint_count = models.IntegerField(default=0)
+    total_print_count = models.IntegerField(default=1)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)

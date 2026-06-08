@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.desktop_sync',
     'apps.hardening',
     'apps.operations',
+    'apps.reprints',
 ]
 
 MIDDLEWARE = [

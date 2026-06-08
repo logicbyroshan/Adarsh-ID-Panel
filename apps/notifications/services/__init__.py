@@ -44,6 +44,10 @@ NOTIF_PREF_MAP = {
     'BULK_WORKFLOW_ACTION': 'workflow_notifications',
     'CARD_DOWNLOADED': 'workflow_notifications',
     'CARDS_PRINTED': 'workflow_notifications',  # Custom
+    'REPRINT_REQUESTED': 'workflow_notifications',
+    'REPRINT_APPROVED': 'workflow_notifications',
+    'REPRINT_REJECTED': 'workflow_notifications',
+    'REPRINT_PRINTED': 'workflow_notifications',
     
     # Import notifications
     'IMPORT_START': 'import_notifications',

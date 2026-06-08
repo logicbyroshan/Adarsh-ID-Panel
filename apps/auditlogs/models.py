@@ -44,6 +44,11 @@ class AuditEvent(models.TextChoices):
     DEPLOYMENT_VALIDATION = 'DEPLOYMENT_VALIDATION', 'Deployment Validation'
     DISK_WARNING = 'DISK_WARNING', 'Disk Warning'
     MEMORY_WARNING = 'MEMORY_WARNING', 'Memory Warning'
+    REPRINT_REQUESTED = 'REPRINT_REQUESTED', 'Reprint Requested'
+    REPRINT_APPROVED = 'REPRINT_APPROVED', 'Reprint Approved'
+    REPRINT_REJECTED = 'REPRINT_REJECTED', 'Reprint Rejected'
+    REPRINT_PRINTED = 'REPRINT_PRINTED', 'Reprint Printed'
+    CARD_UPDATED_REPRINT = 'CARD_UPDATED_REPRINT', 'Card Updated Through Reprint'
 
 class AuditLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -20,6 +20,7 @@ urlpatterns = [
     path('', include('apps.desktop_sync.urls')),
     path('', include('apps.operations.urls')),
     path('notifications/', include('apps.notifications.urls')),
+    path('reprints/', include('apps.reprints.urls')),
 ]
 
 
